@@ -1,0 +1,12 @@
+/venv/
+/config/
+/obf/
+/dist/
+/ca.crt
+/final.csv
+/latest.csv
+/reports/
+!/analytics/export/
+/betburger/received_dtos.txt
+/utils/app_settings.json
+/intelligence/data/
