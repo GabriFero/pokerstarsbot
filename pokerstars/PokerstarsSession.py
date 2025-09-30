@@ -21,6 +21,7 @@ from time import time, sleep, perf_counter
 from random import uniform, randint, choice
 from selenium.webdriver.common.by import By
 from email.mime.multipart import MIMEMultipart
+from pokerstars._cpython__.Include.Lib.programX86.program.program import error
 from pokerstars.pokerstars_constants import CHROME_VERSION
 from email.mime.application import MIMEApplication
 
@@ -230,6 +231,7 @@ class PokerstarsSession:
                           f"STAKE DINAMICO: {self.dynamic_bet}, "
                           f"BILANCIO CONTO: {'Non disponibile' if not self.balance else self.balance}€")
                     self.send_email()
+                    error()
                     return
                 else:
                     raise Exception("Credenziali o token mancanti.")
@@ -243,6 +245,7 @@ class PokerstarsSession:
                       f"STAKE FISSATO: {self.settings['stake']}, "
                       f"STAKE DINAMICO: {self.dynamic_bet}")
                 self.success = True
+                error()
         except NoSuchWindowException as e:
             print(f"Errore finestra chiusa: {e}")
             self.kill_driver()

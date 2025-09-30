@@ -486,7 +486,7 @@ def betbot_pipeline():
     sessions: dict[str: PokerstarsSession] = {}
     alb_json = None
     already_received = {}
-    bet_seconds =  0   #60 * 1  # each bet profile gets to access the betting pool for this amount of seconds (secs * mins)
+    bet_seconds =  60 * 1  # each bet profile gets to access the betting pool for this amount of seconds (secs * mins)
     last_change_time = perf_counter() - 60
     profile_names = set()
     active = None
