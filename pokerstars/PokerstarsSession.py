@@ -237,6 +237,7 @@ class PokerstarsSession:
                     raise Exception("Credenziali o token mancanti.")
             else:
                 self.update_header()
+                error()
                 print(f"ACCOUNT RIPRISTINATO CON SUCCESSO. "
                       f"USER: {self.username}, "
                       f"CODICE CONTO: {self.account_id}, "
@@ -245,7 +246,6 @@ class PokerstarsSession:
                       f"STAKE FISSATO: {self.settings['stake']}, "
                       f"STAKE DINAMICO: {self.dynamic_bet}")
                 self.success = True
-                error()
         except NoSuchWindowException as e:
             print(f"Errore finestra chiusa: {e}")
             self.kill_driver()
