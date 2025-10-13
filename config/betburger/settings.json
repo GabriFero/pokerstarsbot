@@ -1,0 +1,31 @@
+{
+  "url": "https://rest-api-lv.betburger.com/api/v1/valuebets/bot_pro_search",
+  "api":[
+    {
+      "key": "bcd7b0030f40715f8e4e1d20f978dc7c",
+      "enabled": true,
+
+      "filters": [
+        {
+          "id": "790399",
+          "left": 1.5,
+          "right": 5
+        }
+      ],
+      "invalid": []
+    },
+    {
+      "key": "bcd7b0030f40715f8e4e1d20f978dc7c",
+      "enabled": false,
+
+      "filters": [
+       {
+          "id": "",
+          "left": 1.6,
+          "right": 5
+       }
+      ],
+      "invalid": []
+    }
+  ]
+}

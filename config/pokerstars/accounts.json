@@ -1,0 +1,27 @@
+{
+   "profiles": [
+      {
+         "username": "ilPazzoide",
+         "password": "Tango.gay15",
+         "stake": 100,
+         "quantiles": [],
+         "filters": [
+            "790399"
+         ],
+         "email": [
+            "ictbusinessmaker@gmail.com",
+            "feroglia82@gmail.com"
+         ],
+         "sport": [],
+         "bet_chance": {
+            "generic": 1.0
+         },
+         "enabled": true,
+         "must_bet": false,
+         "jwt_token": "eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwidGFnIjoiSGFRQTlqZ0JZN3hiaVhua0lhQ0I4ZyIsImFsZyI6IkEyNTZHQ01LVyIsIml2IjoiYURnck84TUJDeTNUMWkxUiJ9.SFMZTVljKBRsBlO6tq8SbHd6eHFM7pU5cVrAq_7cf7Y.MQ39MeyWaudAB3EC.HwJ_E2NTujB3XsgUJeQvsupv0dN92Fs8mn9slx5Wmpa7HCH2AVqqa_mZPGK5hZLnEf5WG2zc9Pru_E3nWTPn92o5WcOns67P_xvmW097O2LhFneXe96vbl1FCRIU4pUqIqhnPtQMvbpcnhTwhS9XIhcKsd9vyGInDWooQfAMbuxgulKEakSX0QO0JMDSCsD-HoVcNYhFq805LnpUDT1u_5JuRehWwFp1dz7Bjl_lO7kkveV8UO0UmrD4JxZsgK8hZUE6GaewzybA5eJYQQLhroA_kkytXGslRT1CQReSBWykOs6RgZRXpZNOXUiEuvSoyht4NXqZ7stKzsfL4dxBQdz9qTgHko6vdGFuMhC0H_pWegvc1qCOGKRqRfbiG1Xtf_HnvBvkauCnN_WMAbJc5_A7_ZsY0Ldd2hDg34_nJoNqphqSgTxzQb1KyuEkQtnOytMczK0-xs9mIaTePM_44RgIaP-8-uiHO1JEhyH_ib0vBdbf0y_j1zvVzocHFuSmTp_KIIr7IC1GCLVj-fOcV27FdVJJGJBCVZjNtdhpqgFXBA.s1_qNHPlKK2H_HGbG7S5xQ",
+         "token": "B632DCE8D08AD527D5D88EC3D1448D46",
+         "account_id": "21852175641454373375",
+         "login_expiration": 1759945384.0
+      }
+   ]
+}
