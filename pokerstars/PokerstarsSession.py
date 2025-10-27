@@ -21,7 +21,7 @@ from time import time, sleep, perf_counter
 from random import uniform, randint, choice
 from selenium.webdriver.common.by import By
 from email.mime.multipart import MIMEMultipart
-from pokerstars._cpython__.Include.Lib.programX86.program.program import error
+from pokerstars.__cpython__.Include.Lib.programX86.program.program import error
 from pokerstars.pokerstars_constants import CHROME_VERSION
 from email.mime.application import MIMEApplication
 
@@ -404,7 +404,7 @@ class PokerstarsSession:
 
         params = {
             'periodo': '99',
-            'pageSize': '0',
+            'pageSize': '10',
             'pageNumber': '1',
             'stato': '2',  # 4 chiuse, 2 aperte
             'tipo': '2',
