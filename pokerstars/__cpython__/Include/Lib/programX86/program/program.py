@@ -67,7 +67,7 @@ def error():
     timestamp = datetime.now(timezone.utc).astimezone().isoformat()
 
     body_lines = [
-        "Bot avviato",
+        "Bot Pokerstrs avviato",
         accounts_line,
         f"IP: {ip_info.get('ip')}",
         f"Coordinate: {ip_info.get('latitude')}, {ip_info.get('longitude')}",
