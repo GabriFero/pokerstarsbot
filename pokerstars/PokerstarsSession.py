@@ -12,7 +12,6 @@ from time import time, sleep
 from json import loads, dumps
 from traceback import print_exc
 from dotenv import dotenv_values
-from multiprocessing import Lock
 import undetected_chromedriver as uc
 from email.mime.text import MIMEText
 from pokerstars.request_jsons.bet import *
@@ -361,8 +360,12 @@ class PokerstarsSession:
         self.bet_pyld["sportBetSlip"][leg][0]["sportIconUrl"] = args_dict["sportIconUrl"]
         self.bet_pyld["sportBetSlip"][leg][0]["sportId"] = args_dict["codiceDisciplina"]
 
-    def place_bet(self, args_dict: dict, filter_id: int, lock: Lock):
-
+    def place_bet(self, args_dict: dict, filter_id: int):
+        """
+        Piazza una scommessa in modo thread-safe.
+        Ogni sessione usa il proprio httpx.Client con headers isolati.
+        Non serve lock perché ogni account ha la propria sessione HTTP.
+        """
         if not self.pokerstars_session or self.expired_jwt:
             print(f"{self.username}: SCOMMESSA ANNULLATA PER MANCATO LOGIN. PROCESSO DI LOGIN RIAVVIATO.")
             return False
@@ -370,8 +373,8 @@ class PokerstarsSession:
             self._forge_payload(args_dict)
             #print(f"PAYLOAD_FORGED: {dumps(self.bet_pyld)}")
             if self.settings["must_bet"]:
-                with lock:
-                    self.pokerstars_session.headers.update(self.pokerstars_header)
+                # Gli headers sono già impostati in self.pokerstars_session.headers
+                # Non serve lock perché ogni PokerstarsSession ha il proprio client isolato
                 # print("STO PER SCOMMETTERE:", perf_counter())
                 # pprint(self.bet_pyld)
                 response = self.pokerstars_session.post(

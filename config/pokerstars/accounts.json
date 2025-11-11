@@ -6,7 +6,7 @@
          "stake": 100,
          "quantiles": [],
          "filters": [
-            "790399"
+            "1321439"
          ],
          "email": [
             "ictbusinessmaker@gmail.com",
@@ -17,11 +17,31 @@
             "generic": 1.0
          },
          "enabled": true,
-         "must_bet": false,
-         "jwt_token": "eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwidGFnIjoicDlmWkNLbS1NMWhVY0pKTjl5RC0xZyIsImFsZyI6IkEyNTZHQ01LVyIsIml2IjoiVVFXMF9wanhtZzFDUDdKbyJ9.3-auDGj89_arRVVQLVc5oji6rmaDKvW97O_P4a4jGWE.Zlv9J2Lb6u9C3pXZ.lv584TFHl35fLc_yfia_x-KPqCqIA33wm8Go5FyZo58HCsCTXJ2IISJ_CmocdkQpE1Ir6LKCJl2-4lRbolf__Weugcwb02a4IlZc-yuzc98Yq_snE7hmpf66Rth4jacjIvJonnP8oJbhD7nWpLdeeW_uZl-7yOsdb5lYw9WOIV-kKMXMkX0e8pRuN9Jew95cvXGCDoJ1hBfztezlz3AsISV5v_ApPRsDuskGS4W49u56NYDMWpKg3Uw-5WDSwWSBn9qdvY8pKkdWKZ5QshszJ3dtyPs5sDKtR7ekbqtd6xLsKbVbzRHOndYRZUvg4HKbJDaBw7fiqpWnUWANGoUR9fY6ttR25XZfm53xhsRNDSb9bvQH3yF4oXFS9PDJuJOl-8QTjWaEN0OB0GFxVsKdu7B80O1M7YZxTVuC51RcbYxqiaqQOTYf9vjvuixaFtT9d3CUhwnyAS5iFkzeRRSI9ABqB8o97yTrc5zloUWtzLR10b6Ho6TcywgRm0mH0DtAagUWJSWwgZPIbpKWHeNZhPJnSiEhq-h6A2TDZ-cdIsTxrA.WQb4aa7ddZjzA6PnSbmEwg",
-         "token": "5D253F952171050E9708CCF5C85F2599",
+         "must_bet": true,
+         "jwt_token": "eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwidGFnIjoiNXllZ25BVFBVUFliVl9SZnlPdTZHdyIsImFsZyI6IkEyNTZHQ01LVyIsIml2IjoiV1djSVBQWThtdHJnM2FLdCJ9.MA9hqRx5QUXO-TEqCWyJmp0FdPu2kIPmuqpyeTodikI.vrl4HrlaHBvP2EM_.Mzu8T-skVPoiybxXHfcnYw4_2rR68ejwWxAGsjTzFCjcXcxY6OoUfYuM_shH08f9I3bOce7U1OMVdMdJVNFVTJJMuUMsxNvXwkDq-AaTb_X-UYE2Q-gm5yG8coYVPj9TywUAtYU273lbeKUIQyWBtqpSRcCcNHGGJODCSUZbKUXCe5nPVCRnApovEYGq4HQQ4VuDJAzbZZlFL_toviulOLRjPiUmt18UVFY-1XrOawlY4ZdZPuP-lbWIGbEUONrpiTddv6OXAJzeVNd-PxFn8JLgsbdwfOGYQ-ud8OXUq2H8OjZj6aflK_40mBGMJxcSiN50cjye3UX9YfOhtm76tP__tb9I89ebUeio-pVtxefLrKnxHdKgUJnwhhGpVt6HQdLBpuzeWF_rdyHc0Q535xXntNHV0ZOiEF7z2oz4n8QyunEHXIdDVRLemXjA5v69V5XdzKuLqh6HSOpPf4mdDJUMbnCqfXLHOTUMBQuHLTURCXk7-SWUkF4oJUvQZP4BGkw6Oac8RycsvDNzk6y1XvfN4AzFWWJI5oD9UeO3xRCqMw.4xvi5rpnUFAKSQ_Ze0vO_A",
+         "token": "A639DAE8947C52F5ACBDFAB8C1C6BA5D",
          "account_id": "21852175641454373375",
-         "login_expiration": 1761596848.0
+         "login_expiration": 1762891009.0
+      },
+      {
+         "username": "Franchino10",
+         "password": "Calciatore10!",
+         "stake": 100,
+         "quantiles": [],
+         "filters": [
+            "1321439"
+         ],
+         "email": ["feroglia82@gmail.com"],
+         "sport": [],
+         "bet_chance": {
+            "generic": 1.0
+         },
+         "enabled": true,
+         "must_bet": true,
+         "jwt_token": "",
+         "token": "",
+         "account_id": "",
+         "login_expiration": 0
       }
    ]
 }

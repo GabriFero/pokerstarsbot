@@ -3,7 +3,6 @@ import traceback
 
 from psutil import process_iter
 from requests import ReadTimeout
-from multiprocessing import Lock
 from random import choice, shuffle
 from betburger.betburger_api import *
 from datetime import datetime, timedelta
@@ -22,7 +21,7 @@ CODICE_DISCIPLINA_TENNIS = 3
 general_purpose_pool = ThreadPool(10)
 clt = httpx.Client(http2=True)
 login_timestamps = {}
-lock = Lock()
+# Lock rimosso - non più necessario con sessioni HTTP isolate per account
 
 
 def get_id(top_page, info):
@@ -346,10 +345,15 @@ def new_multi_match_info(dtos_map, alb, past_pl, past_ev, prof_names, games_dict
 
 
 def new_bet_process(kwg_dict: dict, sessions: dict[str: PokerstarsSession], bet_pool):
+    """
+    Gestisce il processo di betting multi-account simultaneo.
+    Raccolta dati condivisa (kwg_dict è già pronto), betting parallelo per ogni account.
+    """
     #print(f"NUOVA SCOMMESSA RICEVUTA DA BETBURGER: {kwg_dict}")
     #print(f"sessions: {sessions.keys()}")
     success = False
-    args = [(profile, kwg_dict, kwg_dict["FILTER"], lock)
+    # Rimuovo lock dall'args - non più necessario con sessioni HTTP isolate
+    args = [(profile, kwg_dict, kwg_dict["FILTER"])
             for name, profile in sessions.items()
             if (kwg_dict["FILTER"] in profile.settings["filters"]
                 and profile.event_bets.get(kwg_dict["regulatorEventId"]) is None
@@ -358,6 +362,8 @@ def new_bet_process(kwg_dict: dict, sessions: dict[str: PokerstarsSession], bet_
                 and profile.should_bet(kwg_dict["sportDescription"]))]
     #print(f"ARGS: {args}")
     if args:
+        print(f"🎯 BETTING SIMULTANEO INIZIATO PER {len(args)} ACCOUNT(S): {[arg[0].username for arg in args]}")
+        # ThreadPool esegue le scommesse in parallelo - ogni account usa la propria sessione HTTP
         for pool_res in bet_pool.map_async(buy_bet_by_filter, args).get():
             name = pool_res[0]
             result = pool_res[1]
@@ -380,14 +386,18 @@ def deactivate_account(username):
 
 
 def buy_bet_by_filter(args):
+    """
+    Esegue la scommessa per un singolo account.
+    Thread-safe: ogni account ha la propria sessione HTTP isolata.
+    """
     pokerstars_profile = args[0]
     kwg = args[1]
     #print(f"{pokerstars_profile.username}: TENTATIVO DI SCOMMETTERE SU FILTRO {args[2]}...")
     filter_id = args[2]
-    pool_lock = args[3]
+    # Rimosso pool_lock - non più necessario
     success = False
     try:
-        bet_response = pokerstars_profile.place_bet(kwg, filter_id, pool_lock)
+        bet_response = pokerstars_profile.place_bet(kwg, filter_id)
         #print("bet_response:", bet_response.text)
         if bet_response is False:
             raise AttributeError
@@ -408,7 +418,7 @@ def buy_bet_by_filter(args):
             to_be_blocked = pokerstars_profile.check_for_anomalies(code := int(content["code"]))
             if content["code"] == 0:
                 success = True
-                string_to_print = (f"\nSCOMMESSA PIAZZATA:\n"
+                string_to_print = (f"\n✅ SCOMMESSA PIAZZATA:\n"
                                    f"ACCOUNT: {pokerstars_profile.username}\n"
                                    f"FILTRO: {filter_id}\n"
                                    f"ORA: {datetime.fromtimestamp(time()).strftime('%m/%d/%Y, %H:%M:%S')}\n"
@@ -422,7 +432,7 @@ def buy_bet_by_filter(args):
                                    f"ESITO: {kwg['descrizioneEsito']}\n"
                                    f"TEMPO DI ELABORAZIONE pokerstars: {bet_response.elapsed}\n")
                 print(string_to_print)
-                # Generate a random number of seconds between 20 and 30
+                # Random delay tra 12-18 secondi per evitare pattern detection
                 random_seconds = random.randint(12, 18)
                 #print("Sleeping for", random_seconds, "seconds")
 
@@ -436,7 +446,7 @@ def buy_bet_by_filter(args):
                 pokerstars_profile.play_bets[kwg["KEY_AGGIUNTIVA"]] = time()
             elif code == -1050810:
                 #to_be_blocked = True
-                string_to_print = (f"\nSCOMMESSA IN FASE DI ELABORAZIONE, ERRORE!:\n"
+                string_to_print = (f"\n⚠️ SCOMMESSA IN FASE DI ELABORAZIONE, ERRORE!:\n"
                                    f"ACCOUNT: {pokerstars_profile.username}\n"
                                    f"FILTRO: {filter_id}\n"
                                    f"ORA: {datetime.fromtimestamp(time()).strftime('%m/%d/%Y, %H:%M:%S')}\n"
@@ -449,7 +459,7 @@ def buy_bet_by_filter(args):
                 print("sleeping")
                 sleep(30)
             else:
-                to_print = (f"{pokerstars_profile.username}: SCOMMESSA RIFIUTATA SU FILTRO {filter_id}: "
+                to_print = (f"❌ {pokerstars_profile.username}: SCOMMESSA RIFIUTATA SU FILTRO {filter_id}: "
                             f"{code}: {content['message']} ")
                 if code == -1020101:
                     to_print += f"({content['info'][1]} -> {content['info'][2]})"
