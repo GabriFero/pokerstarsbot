@@ -1,6 +1,6 @@
 bet_payload = {
     'credentials': {
-        'channelId': 62,
+        'channelId': "62",
         'channelType': 'ONLINE',
         'token': "",
         'accountCode': "",
@@ -35,7 +35,7 @@ bet_payload = {
                         {
                             'name': 'MIN_NUM_EVENT',
                             'type': 'INTEGER',
-                            'value': '5',
+                            'value': '3',
                         },
                     ],
                 },

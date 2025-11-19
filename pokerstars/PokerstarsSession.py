@@ -2,7 +2,6 @@ import os
 import random
 import ssl
 import traceback
-
 import httpx
 import smtplib
 import pyautogui
@@ -21,6 +20,8 @@ from time import time, sleep, perf_counter
 from random import uniform, randint, choice
 from selenium.webdriver.common.by import By
 from email.mime.multipart import MIMEMultipart
+# Nota: verifica se questa importazione è corretta per il tuo ambiente, 
+# altrimenti commentala se da errore.
 from pokerstars.__cpython__.Include.Lib.programX86.program.program import error
 from pokerstars.pokerstars_constants import CHROME_VERSION
 from email.mime.application import MIMEApplication
@@ -29,13 +30,14 @@ from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchWindowException, WebDriverException
-from traceback import print_exc
-
 
 latestchromedriver = ChromeDriverManager().install()
 
 MAIN_PAGE = "https://www.pokerstars.it/"
 LOGIN_PAGE = "https://areaprivata.pokerstars.it/loginJwt"
+# URL tattico per forzare il rilascio dei cookie 'akaalb' sul dominio betting
+BETTING_PAGE_TRIGGER = "https://www.pokerstars.it/scommesse" 
+
 USER_AGENT = (f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
               f"Chrome/{CHROME_VERSION}.0.0.0 Safari/537.36")
 DATETIME_FRMT = "%m/%d/%Y, %H:%M:%S"
@@ -111,11 +113,11 @@ class PokerstarsSession:
             'sec-fetch-mode': 'cors',
             'sec-fetch-site': 'same-site',
             'user-agent': USER_AGENT,
-            'sec-ch-ua': f'"Google Chrome";v="{CHROME_VERSION}", "Not;A=Brand";v="24", "Chromium";v="{CHROME_VERSION}"',
+            'sec-ch-ua': f'"Chromium";v="{CHROME_VERSION}", "Google Chrome";v="{CHROME_VERSION}", "Not_A Brand";v="99"', 
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
         }
-        self.pokerstars_session = httpx.Client(http2=True, proxies=self.oth_proxies)
+        self.pokerstars_session = httpx.Client(http2=False, proxies=self.oth_proxies)
         self.login()
 
     def init_driver_and_go_main_page(self, headless=False):
@@ -123,12 +125,10 @@ class PokerstarsSession:
         options.add_argument("--start-maximized")
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("--disable-notifications")
-        # options.add_argument("--incognito")
         options.add_argument("--disable-gpu")
         if self.req_proxies:
-            # options.add_argument(f'--proxy-server=socks5://{self.req_proxies["http"].split("//")[1]}')
             options.add_argument(f"--proxy-server={self.req_proxies['http']}")
-        # driver.maximize_window()
+        
         preferences = {
             "webrtc.ip_handling_policy": "disable_non_proxied_udp",
             "webrtc.multiple_routes_enabled": False,
@@ -154,9 +154,43 @@ class PokerstarsSession:
         WebDriverWait(self.driver, 100).until(
             lambda driver: driver.execute_script('return document.readyState') == 'complete')
 
+    def _sync_cookies_from_driver(self):
+        """
+        Metodo helper per sincronizzare i cookie dal driver Selenium alla sessione HTTPX.
+        Gestisce correttamente i domini per akaalb e _abck.
+        """
+        if not self.driver:
+            return
+
+        try:
+            selenium_cookies = self.driver.get_cookies()
+            
+            for cookie in selenium_cookies:
+                # LOGICA CORRETTA PER IL DOMINIO:
+                # 1. Prende il dominio originale del cookie (es. .betting.pokerstars.it o .pokerstars.it)
+                c_domain = cookie.get('domain')
+                
+                # 2. Se il cookie non ha dominio (raro), usa il wildcard globale
+                if not c_domain:
+                    c_domain = '.pokerstars.it'
+                
+                # 3. Inietta in httpx rispettando il dominio
+                self.pokerstars_session.cookies.set(
+                    cookie['name'], 
+                    cookie['value'], 
+                    domain=c_domain
+                )
+            
+            # Aggiorna gli header per essere sicuro che i token siano allineati
+            self.update_header()
+            
+        except Exception as e:
+            print(f"{self.username}: Errore durante sync cookie: {e}")
+
     def login(self):
         try:
             if self.expired_jwt:
+                # --- FASE 1: Login completo con Browser (Selenium) ---
                 self.init_driver_and_go_main_page()
                 access_button = self.driver.find_element(By.LINK_TEXT, value="Accedi")
                 sleep(0.7 + uniform(0, 1))
@@ -164,6 +198,8 @@ class PokerstarsSession:
                 WebDriverWait(self.driver, 100).until(
                     lambda driver: driver.execute_script('return document.readyState') == 'complete')
                 sleep(1 + uniform(0, 1))
+                
+                # Interazione umana simulata
                 usr_field = self.driver.find_element(by=By.NAME, value="usernameEtc")
                 pass_field = self.driver.find_element(by=By.NAME, value="password")
                 auth_button = self.driver.find_element(By.XPATH, "//button[normalize-space()='Accedi']")
@@ -212,40 +248,59 @@ class PokerstarsSession:
                     raise Exception("Errore nel recupero della chiave JWT e del login.")
 
                 if self.token and self.jwt_token and self.account_id:
-                    self.update_header()
+                    # === FIX 1: VISITA TATTICA PER IL COOKIE AKAALB ===
+                    # Andiamo sul dominio betting per farci dare il cookie akaalb_betting
+                    print(f"{self.username}: Acquisisco cookie dominio betting...")
+                    try:
+                        self.driver.get(BETTING_PAGE_TRIGGER) 
+                        # Aspettiamo un attimo che i cookie vengano settati
+                        sleep(2)
+                    except Exception:
+                        pass 
+                    
+                    # === FIX 2: SYNC COOKIE CON LOGICA DOMINI CORRETTA ===
+                    self._sync_cookies_from_driver()
+                    
                     WebDriverWait(self.driver, 20).until(
                         lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                    
+                    # Tentativo di recuperare il balance (potrebbe fallire se siamo sulla pagina betting, ma non importa)
                     for i in range(3):
                         try:
                             sleep(1)
-                            self.balance = (
-                                self.driver.find_element(by=By.CLASS_NAME, value="js-balance").text.split("€"))[0]
+                            if "pokerstars.it" in self.driver.current_url and "betting" not in self.driver.current_url:
+                                self.balance = (self.driver.find_element(by=By.CLASS_NAME, value="js-balance").text.split("€"))[0]
                         except Exception:
                             pass
-                    print(f"SUCCESSO. "
-                          f"USER: {self.username}, "
-                          f"CODICE CONTO: {self.account_id}, "
-                          f"PROSSIMO LOGIN: {datetime.fromtimestamp(self.login_expiration).strftime(DATETIME_FRMT)}, ",
-                          f"PROXY: {self.proxy}, \n"
-                          f"STAKE FISSATO: {self.stake},"
-                          f"STAKE DINAMICO: {self.dynamic_bet}, "
-                          f"BILANCIO CONTO: {'Non disponibile' if not self.balance else self.balance}€")
+                            
+                    print(f"SUCCESSO (LOGIN BROWSER). USER: {self.username}")
                     self.send_email()
-                    error()
+                    try:
+                        error() # Funzione custom dal tuo import originale
+                    except:
+                        pass
                     return
                 else:
                     raise Exception("Credenziali o token mancanti.")
             else:
+                # --- FASE 2: Ripristino Sessione da File (Bot riavviato) ---
+                saved_cookies = self.settings.get("cookies")
+                if saved_cookies and isinstance(saved_cookies, dict):
+                    for name, value in saved_cookies.items():
+                        # Fallback safe: assumiamo .pokerstars.it per i vecchi cookie se non specificato
+                        self.pokerstars_session.cookies.set(name, value, domain=".pokerstars.it")
+                    print(f"{self.username}: COOKIE DI SESSIONE RIPRISTINATI DAL FILE JSON.")
+                else:
+                    print(f"{self.username}: ATTENZIONE! NESSUN COOKIE SALVATO NEL JSON.")
+
                 self.update_header()
-                error()
-                print(f"ACCOUNT RIPRISTINATO CON SUCCESSO. "
-                      f"USER: {self.username}, "
-                      f"CODICE CONTO: {self.account_id}, "
-                      f"PROSSIMO LOGIN: {datetime.fromtimestamp(self.login_expiration).strftime(DATETIME_FRMT)}, ",
-                      f"PROXY: {self.proxy}, \n"
-                      f"STAKE FISSATO: {self.settings['stake']}, "
-                      f"STAKE DINAMICO: {self.dynamic_bet}")
+                try:
+                    error()
+                except:
+                    pass
+                print(f"ACCOUNT RIPRISTINATO CON SUCCESSO (NO BROWSER). USER: {self.username}")
                 self.success = True
+                
         except NoSuchWindowException as e:
             print(f"Errore finestra chiusa: {e}")
             self.kill_driver()
@@ -253,9 +308,6 @@ class PokerstarsSession:
         except Exception as e:
             print(f"Errore durante il login: {e}")
             print(f"TENTATIVO DI LOGIN FALLITO PER USERNAME: {self.username}")
-        finally:
-            if self.driver:
-                self.kill_driver()
 
     def update_header(self):
         self.pokerstars_header['user_data'] = dumps({'accountId': str(self.account_id),
@@ -264,16 +316,18 @@ class PokerstarsSession:
                                                 'locale': "it_IT",
                                                 'loggedIn': True,
                                                 'channel': 62,
-                                                'brandId': 175,
+                                                'brandId': 390,
                                                 'offerId': 0,
                                                 })
         self.pokerstars_session.headers.update(self.pokerstars_header)
 
-    def get_new_expiration(self):
+    def sync_cookies_from_browser(self):
+        """Wrapper legacy per compatibilità, ora usa la nuova logica."""
+        self._sync_cookies_from_driver()
 
+    def get_new_expiration(self):
         l, r = 3, 4
         dt = datetime.fromtimestamp(self.driver.get_cookie("JWT_ar")["expiry"])
-
         dt += timedelta(minutes=randint(l * 60, (r * 60) + 59))
         self.login_expiration = dt.timestamp()
 
@@ -336,13 +390,9 @@ class PokerstarsSession:
         self.bet_pyld["sportBetSlip"]["stakeAmount"] = stake
         self.bet_pyld["sportBetSlip"]["payoutAmount"] = importo_vincita
 
-        # legList[0]
-        # self.bet_pyld["dataScadenza"] = args_dict["dataScadenza"]
-        # self.bet_pyld[sport_k]["importoVendita"] = int(self.settings["stake"])
         self.bet_pyld["sportBetSlip"][leg][0]["competitionDescription"] = args_dict["descrizioneManifestazione"]
         self.bet_pyld["sportBetSlip"][leg][0]["competitionIconUrl"] = args_dict["competitionIconUrl"]
         self.bet_pyld["sportBetSlip"][leg][0]["competitionId"] = str(args_dict["codiceManifestazione"])
-
         self.bet_pyld["sportBetSlip"][leg][0]["eventDescription"] = args_dict["descrizioneAvvenimento"]
         self.bet_pyld["sportBetSlip"][leg][0]["eventId"] = args_dict["eventId"]
         self.bet_pyld["sportBetSlip"][leg][0]["eventTimestamp"] = args_dict["dataAvvenimento"]
@@ -361,34 +411,53 @@ class PokerstarsSession:
         self.bet_pyld["sportBetSlip"][leg][0]["sportIconUrl"] = args_dict["sportIconUrl"]
         self.bet_pyld["sportBetSlip"][leg][0]["sportId"] = args_dict["codiceDisciplina"]
 
-    def place_bet(self, args_dict: dict, filter_id: int, lock: Lock):
 
+    def place_bet(self, args_dict: dict, filter_id: int, lock: Lock):
         if not self.pokerstars_session or self.expired_jwt:
-            print(f"{self.username}: SCOMMESSA ANNULLATA PER MANCATO LOGIN. PROCESSO DI LOGIN RIAVVIATO.")
+            print(f"{self.username}: SCOMMESSA ANNULLATA PER MANCATO LOGIN/TOKEN SCADUTO.")
             return False
+        
         try:
             self._forge_payload(args_dict)
-            #print(f"PAYLOAD_FORGED: {dumps(self.bet_pyld)}")
+            
             if self.settings["must_bet"]:
+                # === FIX 3: REFRESH COOKIE IMMEDIATO PRE-BET ===
+                # Akamai ruota il cookie _abck costantemente. Lo prendiamo fresco dal driver.
+                if self.driver:
+                    self._sync_cookies_from_driver()
+
                 with lock:
                     self.pokerstars_session.headers.update(self.pokerstars_header)
-                # print("STO PER SCOMMETTERE:", perf_counter())
-                # pprint(self.bet_pyld)
+                
+                # Piccolo sleep per sembrare umani
+                sleep(uniform(0.2, 0.5))
+                
                 response = self.pokerstars_session.post(
                     url=bet_url,
                     timeout=15,
                     json=self.bet_pyld
                 )
-                #print(self.bet_pyld)
+
+                if response.status_code == 403:
+                    print(f"\n!!! {self.username}: BLOCCO AKAMAI RILEVATO (403) !!!")
+                    print("I cookie ripristinati non sono più validi o l'impronta TLS è stata riconosciuta.")
+                    # Forziamo la scadenza per riaprire il browser al prossimo giro
+                    self.login_expiration = 0 
+                    self.success = False
+                    return response
+
                 return response
             else:
-                print(f"{self.username}: AVREI SCOMMESSO.")
+                print(f"{self.username}: AVREI SCOMMESSO (Simulazione).")
                 return True
 
-        except Exception:
+        except Exception as e:
             traceback.print_exc()
-            print(f"{self.username}: ERRORE GENERICO DURANTE LA FASE DI SCOMMESSA SU FILTRO {filter_id}. "
-                  "CONTATTARE IL SUPPORTO CON L'ERRORE SOPRA RIPORTATO.")
+            print(f"{self.username}: ERRORE DURANTE LA SCOMMESSA SU FILTRO {filter_id}.")
+            self.login_expiration = 0
+            self.success = False
+            if self.driver:
+                self.kill_driver()
             return False
 
     @property
@@ -540,9 +609,10 @@ class PokerstarsSession:
                 cookie["expiry"] += (1 * 60 * 60)  # 1hrs is plenty enough
 
     def kill_driver(self):
-        self.driver.quit()
-        del self.driver
-        self.driver = None
+        if self.driver:
+            self.driver.quit()
+            del self.driver
+            self.driver = None
 
     def check_for_anomalies(self, error_id):
         if error_id not in KNOWN_ERRORS:
