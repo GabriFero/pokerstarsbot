@@ -6,6 +6,7 @@ import traceback
 import httpx
 import smtplib
 import pyautogui
+from threading import Lock as ThreadLock, Thread
 from pprint import pprint
 from copy import deepcopy
 from time import time, sleep
@@ -44,6 +45,8 @@ FORMATS = ["tennis", "calcio", "basket", "top"]
 pyautogui.FAILSAFE = False
 KNOWN_ERRORS = {-1020889, -10142, -10143, -10325, -10043, -10446, -1020101,
                 -1020102, -1071, -103001, -1006, -1020053, -1020013, -5, -1050202}
+MAX_BET_API_CALLS = 5
+LOGOUT_URL = "https://areaprivata.pokerstars.it/api/authentication-ms/v1/logout"
 
 
 def suppress_exception_in_del(uc):
@@ -62,7 +65,7 @@ suppress_exception_in_del(uc)
 
 
 class PokerstarsSession:
-    def __init__(self, settings: dict, proxy: str, event_bets=None, play_bets=None, bet_timestamps=None):
+    def __init__(self, settings: dict, proxy: str, event_bets=None, play_bets=None, bet_timestamps=None, standby=False):
         if bet_timestamps is None:
             bet_timestamps = []
         self.driver = None
@@ -94,6 +97,12 @@ class PokerstarsSession:
         self.play_bets = play_bets
         self.balance = None
         self.success = False
+        self.is_standby = standby
+        self.bet_api_calls = 0
+        self.bet_limit_lock = ThreadLock()
+        self.rotating_session = False
+        self.standby_session = None
+        self.standby_preparing = False
         self.stake = settings["stake"]
         self.quantiles = settings["quantiles"]
         self.dynamic_bet = self.validate_dynamic_stakes()
@@ -230,13 +239,21 @@ class PokerstarsSession:
                           f"STAKE FISSATO: {self.stake},"
                           f"STAKE DINAMICO: {self.dynamic_bet}, "
                           f"BILANCIO CONTO: {'Non disponibile' if not self.balance else self.balance}€")
-                    self.send_email()
+                    with self.bet_limit_lock:
+                        self.bet_api_calls = 0
+                        self.rotating_session = False
+                    self.update_cookies()
+                    self._sync_cookies_to_client()
+                    if not self.is_standby:
+                        self.send_email()
+                        self._prepare_standby_session()
                     error()
                     return
                 else:
                     raise Exception("Credenziali o token mancanti.")
             else:
                 self.update_header()
+                self._sync_cookies_to_client()
                 error()
                 print(f"ACCOUNT RIPRISTINATO CON SUCCESSO. "
                       f"USER: {self.username}, "
@@ -245,7 +262,12 @@ class PokerstarsSession:
                       f"PROXY: {self.proxy}, \n"
                       f"STAKE FISSATO: {self.settings['stake']}, "
                       f"STAKE DINAMICO: {self.dynamic_bet}")
+                with self.bet_limit_lock:
+                    self.bet_api_calls = 0
+                    self.rotating_session = False
                 self.success = True
+                if not self.is_standby:
+                    self._prepare_standby_session()
         except NoSuchWindowException as e:
             print(f"Errore finestra chiusa: {e}")
             self.kill_driver()
@@ -264,7 +286,7 @@ class PokerstarsSession:
                                                 'locale': "it_IT",
                                                 'loggedIn': True,
                                                 'channel': 62,
-                                                'brandId': 175,
+                                                'brandId': 390,
                                                 'offerId': 0,
                                                 })
         self.pokerstars_session.headers.update(self.pokerstars_header)
@@ -366,7 +388,11 @@ class PokerstarsSession:
         if not self.pokerstars_session or self.expired_jwt:
             print(f"{self.username}: SCOMMESSA ANNULLATA PER MANCATO LOGIN. PROCESSO DI LOGIN RIAVVIATO.")
             return False
+        if self.rotating_session:
+            print(f"{self.username}: ROTAZIONE SESSIONE IN CORSO, SCOMMESSA ANNULLATA.")
+            return False
         try:
+            self._sync_cookies_to_client()
             self._forge_payload(args_dict)
             #print(f"PAYLOAD_FORGED: {dumps(self.bet_pyld)}")
             if self.settings["must_bet"]:
@@ -374,17 +400,23 @@ class PokerstarsSession:
                     self.pokerstars_session.headers.update(self.pokerstars_header)
                 # print("STO PER SCOMMETTERE:", perf_counter())
                 # pprint(self.bet_pyld)
+                with self.bet_limit_lock:
+                    self.bet_api_calls += 1
+                    current_call = self.bet_api_calls
+                if current_call >= MAX_BET_API_CALLS - 1:
+                    self._prepare_standby_session()
                 response = self.pokerstars_session.post(
                     url=bet_url,
                     timeout=15,
                     json=self.bet_pyld
                 )
+                self._update_cookies_from_response(response)
                 #print(self.bet_pyld)
+                self._rotate_session_if_needed(current_call)
                 return response
             else:
                 print(f"{self.username}: AVREI SCOMMESSO.")
                 return True
-
         except Exception:
             traceback.print_exc()
             print(f"{self.username}: ERRORE GENERICO DURANTE LA FASE DI SCOMMESSA SU FILTRO {filter_id}. "
@@ -538,11 +570,172 @@ class PokerstarsSession:
         for cookie in self.cookies:
             if cookie.get("expiry") is not None:
                 cookie["expiry"] += (1 * 60 * 60)  # 1hrs is plenty enough
+        self._sync_cookies_to_client()
+
+    def _sync_cookies_to_client(self):
+        if not self.cookies:
+            return
+        for cookie in self.cookies:
+            try:
+                self.pokerstars_session.cookies.set(
+                    cookie["name"],
+                    cookie["value"],
+                    domain=cookie.get("domain") or ".pokerstars.it",
+                    path=cookie.get("path", "/")
+                )
+            except Exception:
+                pass
+
+    def _update_cookies_from_response(self, response):
+        try:
+            if self.cookies is None:
+                self.cookies = []
+            cookie_map = {(c["name"], c.get("domain"), c.get("path", "/")): c for c in self.cookies}
+            for cookie in response.cookies.jar:
+                key = (cookie.name, cookie.domain, cookie.path or "/")
+                cookie_map[key] = {
+                    "name": cookie.name,
+                    "value": cookie.value,
+                    "domain": cookie.domain,
+                    "path": cookie.path
+                }
+                self.pokerstars_session.cookies.set(
+                    cookie.name,
+                    cookie.value,
+                    domain=cookie.domain,
+                    path=cookie.path
+                )
+            self.cookies = list(cookie_map.values())
+        except Exception:
+            print_exc()
+
+    def _get_cookie_value(self, name: str):
+        if self.cookies:
+            for cookie in self.cookies:
+                if cookie.get("name") == name:
+                    return cookie.get("value")
+        try:
+            return self.pokerstars_session.cookies.get(name)
+        except Exception:
+            return None
+
+    def _prepare_standby_session(self):
+        if self.is_standby or self.standby_preparing or (self.standby_session and self.standby_session.success):
+            return
+        self.standby_preparing = True
+        print(f"{self.username}: PREPARAZIONE SESSIONE STANDBY AVVIATA.")
+
+        def _worker():
+            standby = None
+            try:
+                standby = PokerstarsSession(self.settings, self.proxy,
+                                            event_bets=self.event_bets,
+                                            play_bets=self.play_bets,
+                                            bet_timestamps=self.bet_timestamps,
+                                            standby=True)
+                if standby.success:
+                    self.standby_session = standby
+                    print(f"{self.username}: SESSIONE STANDBY PRONTA.")
+                else:
+                    standby = None
+                    print(f"{self.username}: SESSIONE STANDBY FALLITA.")
+            except Exception:
+                print_exc()
+                standby = None
+            finally:
+                self.standby_preparing = False
+        Thread(target=_worker, daemon=True).start()
+
+    def _logout_session(self):
+        if not self.jwt_token:
+            return None
+        headers = {
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "authorization": f"Bearer {self.jwt_token}",
+            "origin": "https://areaprivata.pokerstars.it",
+            "referer": "https://areaprivata.pokerstars.it/",
+            "user-agent": USER_AGENT,
+            "x-channel-id": "62",
+            "x-channel-info": USER_AGENT,
+        }
+        xsrf = self._get_cookie_value("XSRF-TOKEN")
+        if xsrf:
+            headers["x-xsrf-token"] = xsrf
+        response = self.pokerstars_session.post(
+            url=LOGOUT_URL,
+            json={},
+            headers=headers,
+            timeout=15
+        )
+        self._update_cookies_from_response(response)
+        return response
+
+    def _rotate_session_if_needed(self, current_call=None):
+        if current_call is None:
+            current_call = self.bet_api_calls
+        should_rotate = False
+        with self.bet_limit_lock:
+            if self.bet_api_calls >= MAX_BET_API_CALLS and not self.rotating_session:
+                self.rotating_session = True
+                should_rotate = True
+        if not should_rotate:
+            return
+        print(f"{self.username}: RAGGIUNTE {self.bet_api_calls} CHIAMATE DI BET, LOGOUT E RELOGIN.")
+        try:
+            self._logout_session()
+        except Exception:
+            print_exc()
+        try:
+            self.pokerstars_session.close()
+        except Exception:
+            pass
+        if self.standby_session and self.standby_session.success:
+            self._adopt_standby_session()
+        else:
+            self.pokerstars_session = httpx.Client(http2=True, proxies=self.oth_proxies)
+            self.login_expiration = 0  # forza un nuovo login
+            self.login()
+        with self.bet_limit_lock:
+            self.bet_api_calls = 0
+            self.rotating_session = False
+        self._prepare_standby_session()
+
+    def _adopt_standby_session(self):
+        standby = self.standby_session
+        self.standby_session = None
+        try:
+            self.jwt_token = standby.jwt_token
+            self.token = standby.token
+            self.account_id = standby.account_id
+            self.login_expiration = standby.login_expiration
+            self.success = standby.success
+            try:
+                self.pokerstars_session.close()
+            except Exception:
+                pass
+            self.pokerstars_session = standby.pokerstars_session
+            self.cookies = standby.cookies
+            self.update_header()
+            self._sync_cookies_to_client()
+        finally:
+            try:
+                if standby and standby.driver:
+                    standby.kill_driver()
+            except Exception:
+                pass
 
     def kill_driver(self):
-        self.driver.quit()
-        del self.driver
-        self.driver = None
+        if self.driver:
+            try:
+                self.driver.quit()
+            except Exception:
+                pass
+            try:
+                del self.driver
+            except Exception:
+                pass
+            self.driver = None
 
     def check_for_anomalies(self, error_id):
         if error_id not in KNOWN_ERRORS:

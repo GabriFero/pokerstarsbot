@@ -1,6 +1,5 @@
-import random
 import traceback
-
+import random
 from psutil import process_iter
 from requests import ReadTimeout
 from multiprocessing import Lock
@@ -422,15 +421,10 @@ def buy_bet_by_filter(args):
                                    f"ESITO: {kwg['descrizioneEsito']}\n"
                                    f"TEMPO DI ELABORAZIONE pokerstars: {bet_response.elapsed}\n")
                 print(string_to_print)
-                # Generate a random number of seconds between 20 and 30
-                random_seconds = random.randint(12, 18)
-                #print("Sleeping for", random_seconds, "seconds")
-
-                # Sleep for the randomly generated seconds
+                random_seconds = random.randint(8, 10)
                 sleep(random_seconds)
-
-                
                 print("SLEEPING IS OVER MOTHERFUCKER")
+
                 minutes = 180 if kwg["codiceDisciplina"] == CODICE_DISCIPLINA_TENNIS else 0
                 pokerstars_profile.event_bets[kwg["regulatorEventId"]] = time() + minutes * 60
                 pokerstars_profile.play_bets[kwg["KEY_AGGIUNTIVA"]] = time()
@@ -446,8 +440,6 @@ def buy_bet_by_filter(args):
                 minutes = 180 if kwg["codiceDisciplina"] == CODICE_DISCIPLINA_TENNIS else 0
                 pokerstars_profile.event_bets[kwg["regulatorEventId"]] = time() + minutes * 60
                 pokerstars_profile.play_bets[kwg["KEY_AGGIUNTIVA"]] = time()
-                print("sleeping")
-                sleep(30)
             else:
                 to_print = (f"{pokerstars_profile.username}: SCOMMESSA RIFIUTATA SU FILTRO {filter_id}: "
                             f"{code}: {content['message']} ")

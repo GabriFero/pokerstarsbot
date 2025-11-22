@@ -6,22 +6,19 @@
          "stake": 100,
          "quantiles": [],
          "filters": [
-            "790399"
+            "790252"
          ],
-         "email": [
-            "ictbusinessmaker@gmail.com",
-            "feroglia82@gmail.com"
-         ],
+         "email": [],
          "sport": [],
          "bet_chance": {
             "generic": 1.0
          },
          "enabled": true,
-         "must_bet": false,
-         "jwt_token": "eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwidGFnIjoicDlmWkNLbS1NMWhVY0pKTjl5RC0xZyIsImFsZyI6IkEyNTZHQ01LVyIsIml2IjoiVVFXMF9wanhtZzFDUDdKbyJ9.3-auDGj89_arRVVQLVc5oji6rmaDKvW97O_P4a4jGWE.Zlv9J2Lb6u9C3pXZ.lv584TFHl35fLc_yfia_x-KPqCqIA33wm8Go5FyZo58HCsCTXJ2IISJ_CmocdkQpE1Ir6LKCJl2-4lRbolf__Weugcwb02a4IlZc-yuzc98Yq_snE7hmpf66Rth4jacjIvJonnP8oJbhD7nWpLdeeW_uZl-7yOsdb5lYw9WOIV-kKMXMkX0e8pRuN9Jew95cvXGCDoJ1hBfztezlz3AsISV5v_ApPRsDuskGS4W49u56NYDMWpKg3Uw-5WDSwWSBn9qdvY8pKkdWKZ5QshszJ3dtyPs5sDKtR7ekbqtd6xLsKbVbzRHOndYRZUvg4HKbJDaBw7fiqpWnUWANGoUR9fY6ttR25XZfm53xhsRNDSb9bvQH3yF4oXFS9PDJuJOl-8QTjWaEN0OB0GFxVsKdu7B80O1M7YZxTVuC51RcbYxqiaqQOTYf9vjvuixaFtT9d3CUhwnyAS5iFkzeRRSI9ABqB8o97yTrc5zloUWtzLR10b6Ho6TcywgRm0mH0DtAagUWJSWwgZPIbpKWHeNZhPJnSiEhq-h6A2TDZ-cdIsTxrA.WQb4aa7ddZjzA6PnSbmEwg",
-         "token": "5D253F952171050E9708CCF5C85F2599",
+         "must_bet": true,
+         "jwt_token": "eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwidGFnIjoiUUNZb1UxZk9JeXdXaFFyOTFSMndwQSIsImFsZyI6IkEyNTZHQ01LVyIsIml2IjoibHZSMlBFTEJsSHpqQ19NQiJ9.tTRtFfp8TsB-XVnuv1g62QWSgqD9FIe_cMBvjqETbD4.ohinl51yvUWLUvow.vCKXa_zOYhgZUvty-SxB1O-shctFoTc6mBeF-qYTWlUW4KQLiBT3pk5_VNEoeSWNZKdd1CrYywPzWLtImTnaout11mN65J44JZEdHdM-OdRj6vUsliDn_h_u6CJJUbS2kvRP7U_3bTlOXY5u4amUFfETmsAfQQA1RFJ9pVIKMJlZmFqtHan0PUtnG9N4TVKdBMUQi7HRHfadYcOemLlRpIZOdkujXHwx129WyLvt7q962yfr2BPxopkxx8iWlp41ezTjAFq2Sk0Dtl_UhfpzsdQFeXtZxMaTcLnW2C8FtO4jHyyMxvITjKBEtVj44zBcDKRXKsp8DMEaSSPfGehg29UU-___dlekxKVWlzQX-5Y9smphUHYEogsZ2tkiUzb_qF4g8opiTi_I5fNgIg5ubDs7oi04JxL8gpqSff-1xClnWTFfaaZRzJpQ43v2xjZC7ggjZVH9cC3jDlv84WuyZqLiUpTEh3Ow-6k1mVN46LQuusa0aRWiEzAdZEllFYwN9CBxJQW_tolvqjxak5cc_YUlgiME8XH1ed93wJux1HJ-2Q.UqU0Q2n7JAtDIaBEtuxlYA",
+         "token": "2F7D84C656D32EAD8F0B0D12AF74E794",
          "account_id": "21852175641454373375",
-         "login_expiration": 1761596848.0
+         "login_expiration": 1763842808.0
       }
    ]
 }

@@ -28,6 +28,7 @@ client = httpx.Client(http2=True)
 client.headers.update(header)
 SOCCER_ID = 7
 TABLE_TENNIS_ID = 13
+MAX_BETS_PER_REQUEST = 1
 
 # def extract_settings():
 #     if not path.exists(SETTINGS_PATH):
@@ -115,6 +116,8 @@ def _retrieve_single_filter(args):
 def get_bets(filter_pool):
     result = {}
     at_least_one_enabled = False
+    remaining_bets = MAX_BETS_PER_REQUEST
+    limit_reached = False
     try:
         with open(SETTINGS_PATH, "r") as json_file:
             config = load(json_file)
@@ -140,8 +143,18 @@ def get_bets(filter_pool):
                             print("LIMITE DI BETBURGER DI 30 RICHIESTE OGNI MEZZO MINUTO RAGGIUNTO.")
                             continue
                         elif isinstance(pool_res[0], list) and len(pool_res[0]) > 0:
-                            print(f"TROVATE {len(pool_res[0])} BETS PER FILTRO {pool_res[1]}")
-                            result[pool_res[1]] = pool_res[0]
+                            if remaining_bets <= 0:
+                                if not limit_reached:
+                                    print("LIMITE DI 1 SCOMMESSA PER RICHIESTA RAGGIUNTO; "
+                                          "LE ALTRE SARANNO IGNORATE.")
+                                    limit_reached = True
+                                continue
+                            limited_bets = pool_res[0][:remaining_bets]
+                            print(f"TROVATE {len(pool_res[0])} BETS PER FILTRO {pool_res[1]}. "
+                                  f"PRESE {len(limited_bets)}.")
+                            if limited_bets:
+                                result[pool_res[1]] = limited_bets
+                                remaining_bets -= len(limited_bets)
                             #print(result)
                         elif isinstance(pool_res[0], str) and pool_res[0] == "block":
                             api["enabled"] = False
