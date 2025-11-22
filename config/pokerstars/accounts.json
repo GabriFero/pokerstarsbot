@@ -1,12 +1,16 @@
 {
    "profiles": [
       {
-         "username": "ilPazzoide",
+         "username": "IlPazzoide",
          "password": "Tango.gay15",
          "stake": 100,
          "quantiles": [],
          "filters": [
+<<<<<<< HEAD
             "790252"
+=======
+            "1321439"
+>>>>>>> 764a9f6d772387b1341d1e4afbdc22ba5abc679a
          ],
          "email": [],
          "sport": [],
@@ -15,10 +19,36 @@
          },
          "enabled": true,
          "must_bet": true,
+<<<<<<< HEAD
          "jwt_token": "eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwidGFnIjoiUUNZb1UxZk9JeXdXaFFyOTFSMndwQSIsImFsZyI6IkEyNTZHQ01LVyIsIml2IjoibHZSMlBFTEJsSHpqQ19NQiJ9.tTRtFfp8TsB-XVnuv1g62QWSgqD9FIe_cMBvjqETbD4.ohinl51yvUWLUvow.vCKXa_zOYhgZUvty-SxB1O-shctFoTc6mBeF-qYTWlUW4KQLiBT3pk5_VNEoeSWNZKdd1CrYywPzWLtImTnaout11mN65J44JZEdHdM-OdRj6vUsliDn_h_u6CJJUbS2kvRP7U_3bTlOXY5u4amUFfETmsAfQQA1RFJ9pVIKMJlZmFqtHan0PUtnG9N4TVKdBMUQi7HRHfadYcOemLlRpIZOdkujXHwx129WyLvt7q962yfr2BPxopkxx8iWlp41ezTjAFq2Sk0Dtl_UhfpzsdQFeXtZxMaTcLnW2C8FtO4jHyyMxvITjKBEtVj44zBcDKRXKsp8DMEaSSPfGehg29UU-___dlekxKVWlzQX-5Y9smphUHYEogsZ2tkiUzb_qF4g8opiTi_I5fNgIg5ubDs7oi04JxL8gpqSff-1xClnWTFfaaZRzJpQ43v2xjZC7ggjZVH9cC3jDlv84WuyZqLiUpTEh3Ow-6k1mVN46LQuusa0aRWiEzAdZEllFYwN9CBxJQW_tolvqjxak5cc_YUlgiME8XH1ed93wJux1HJ-2Q.UqU0Q2n7JAtDIaBEtuxlYA",
          "token": "2F7D84C656D32EAD8F0B0D12AF74E794",
          "account_id": "21852175641454373375",
          "login_expiration": 1763842808.0
+=======
+         "jwt_token": "eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwidGFnIjoiSUp3aWRoMERFbTY2YUtkamE5elROQSIsImFsZyI6IkEyNTZHQ01LVyIsIml2IjoiNUJoU1J5Ym1IaUd0cHUtMCJ9.c5CRPC1f6lp32UwwSBNfsWYdNxzrQnvJo3ID0NXplPM.vYjIN_M-u1NVt403.RTzM0YCJ3sIhzc_FBPEn_IB5u0u1OIep8vf0tDEG_FqIH2GUa6jF266ccB-tHzoOJVGMgAofgACjPpXJF-eAlO3wqzS_mFROtVedbn75ePb3vrRG06Nnmh6f25Y2MQGeJX2fpUW-RFLs5xqgPWoFFhjcDi6XUWKreLC7i6WMQSI6Ml2KyTbhjdk549jztE76bZ1XghRE6NvWTVxDzvhEc5Oe2_8RAgYfD9Fkit4iRLXHgTEMa5fGeIYqPJm3QezEHhOPTQgj21uaOm1KaizlN2xL3_uoPJND8emmxu7ydNScNjmd5yJno4YGXP-_ahwhwPQTBXzmHAfraCtGSfmQNyT9-ARnG4wdx3sz4XLxFaHyJzXYTl_jELjmKERpeaeVpk1_I-I4s-e1naaEx35ahlcGC7LMmbbqetlI5xKLori9Aw3TVUMLaoNU4NPue1Ptd76_O8BLdYYA6m3xkCqYlDbb19CmnAb-_9G8vo71jPX42OmUTTXDgQ4z7dX69EUu4LLToyOmqg7EB8GB_u6U4yd1v80NaHEodH2bDv2jk3AZyA.xvi53MwDmGO0CfqhKc0dpg",
+         "token": "0D169FE8866F991023CBB7ADA0E5BB71",
+         "account_id": "21852175641454373375",
+         "login_expiration": 1763603459.0,
+         "cookies": {
+            "_abck": "41F4416D61E23CC7E5DE17B3DABFDFDF~0~YAAQUbYkF9wYWYOaAQAAxFEFng4weHc+iL2eiwLK9Fs1M/XR1MmJ2hTPHX9ANmEsgTNCDyxxtm1zNzPsUtkTOILpHkyzdyA5+rAezu0YgS1E4xlpeBJc4VUv61QarbiNJBAVVpmQzDmTypvBnefnAh9C3GfbvCjBA4xtu5gwnh6SW2cAtJN0eFJjoY0OpgPdMYNLtL6qroGDZ8Lzz7z3B/wnggvV/LUHskreGQ9pkSJaeh0regIJl2giXifDb8rqmutzWhpvUtUN32J9smS51MqBJbg1qLeipXJcnO6vtQX9B4hUDZyH2yF/FTb8kKrP+sSeLWCMp9Ll5UzMsR5N8WDeUzaSTeJKzKI1YvrZanx67De2nyHaBHRi/of3tWKsL9ai7SBuxDM/QBLKZOUJJ9nJWwrndzHiIomgnlUpS6wGZMi4pnny2/yQeO7f1AzzlDY4WWFEG+AdX6TTAh3b4j91+IFkfuKu7gMyTc+da94Spi5FfUbmeHuGdwxCgLJwdVMNphl3PbrwvYvtNIklgdlfxdiAaQbQ8kcyTAS57riBryR67Dvounu4HjlgUlgbQtn173qVPy2nDEDD3Jvd4omCJzjfA1f1DjkBdW0Rb1mBNSB4kGxVG/rShiH1tQy3M50bPEgaj6dU422Y2wlJQzRpCBJSxqcA7TtidssWZ66CpR/qgIbZlgi8psBgYBTobFyJ3bqoBe7p9P+CWQ4+/6aDMRbvNw+MSkFTcAHtARhkQn8c/Ea+JmdKpyYzQG6tk2F/MaoQh1TeCiKo+83fonaLZQRoD2HmieAzHUrR679wJjGX43kSGgLsKsSoTSlcaM/dMt243W4rJHrJ94pFqbkmgE+TDeyuBu7JTaNd8J1DNmccjOYpgIbxy2ygxNroN2unsNHY53kUDcsUtvYCKwlxSFQKLFG7JYtpqGWX8QiwgXZPaEerE+jSjgBa1qNfcmmD+lnf6h+h~-1~-1~-1~AAQAAAAE%2f%2f%2f%2f%2f83F9V8Ys%2fTuD0WxWlChzuU2L+b0PIrFKJ93C1nI4ZXpsThwgnHiXeLjtm0+8YLl0asajQcYgFKO1JDT7%2frtjky0aIg5y3J5CQke~-1",
+            "bm_sv": "8EB75A04784FB8C18A89F6AFA3B3B7CB~YAAQUbYkF80YWYOaAQAAa1EFnh1j0UBtQh6kakP2OZTZGLNkZ6b8rsAYBlczLrMPYox+QamncHZsDEhJtpr5gEIgdJap+FYBhUJaKc1seg29pvsdyx5F5mhQKw5GkeVnlsIt2RuyQssyFq+I/MeK8vbZ662Filkh9KedbUvyROlItaKMTLAdN97UjZ3SdeL7KfaaHe/GX+cZcS2hhJKVOfVDb5jUGNLBFsbtUopw8d3SXedrLMCNyPS6FCLJ72Rs7ddrmw==~1",
+            "login_ar": "codiceConto=21852175641454373375%3Btoken=0D169FE8866F991023CBB7ADA0E5BB71%3Bpvd=GE9005%3BbillCodeId=10870797%3Bic=10870797",
+            "gameBreakSet_ar": "login",
+            "vvct": "20251119lBRtCk16fQIRge39",
+            "JWT_ar": "eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwidGFnIjoiSUp3aWRoMERFbTY2YUtkamE5elROQSIsImFsZyI6IkEyNTZHQ01LVyIsIml2IjoiNUJoU1J5Ym1IaUd0cHUtMCJ9.c5CRPC1f6lp32UwwSBNfsWYdNxzrQnvJo3ID0NXplPM.vYjIN_M-u1NVt403.RTzM0YCJ3sIhzc_FBPEn_IB5u0u1OIep8vf0tDEG_FqIH2GUa6jF266ccB-tHzoOJVGMgAofgACjPpXJF-eAlO3wqzS_mFROtVedbn75ePb3vrRG06Nnmh6f25Y2MQGeJX2fpUW-RFLs5xqgPWoFFhjcDi6XUWKreLC7i6WMQSI6Ml2KyTbhjdk549jztE76bZ1XghRE6NvWTVxDzvhEc5Oe2_8RAgYfD9Fkit4iRLXHgTEMa5fGeIYqPJm3QezEHhOPTQgj21uaOm1KaizlN2xL3_uoPJND8emmxu7ydNScNjmd5yJno4YGXP-_ahwhwPQTBXzmHAfraCtGSfmQNyT9-ARnG4wdx3sz4XLxFaHyJzXYTl_jELjmKERpeaeVpk1_I-I4s-e1naaEx35ahlcGC7LMmbbqetlI5xKLori9Aw3TVUMLaoNU4NPue1Ptd76_O8BLdYYA6m3xkCqYlDbb19CmnAb-_9G8vo71jPX42OmUTTXDgQ4z7dX69EUu4LLToyOmqg7EB8GB_u6U4yd1v80NaHEodH2bDv2jk3AZyA.xvi53MwDmGO0CfqhKc0dpg",
+            "vvcu": "20251119xCe1UVj2B6mt2EZ5",
+            "AUTH_SESSION": "false",
+            "s_ivc": "true",
+            "s_vnc365": "1795123766264%26vn%3D1",
+            "s_dur": "1763587766263",
+            "kndctr_CEFE1E53667C8CEC0A495CA2_AdobeOrg_identity": "CiY1MzEzOTQzMzgyOTk2NzY2Mzg3NDQ1MjQxNzQ4Nzc3NDc4OTUyOVITCLPbkvCpMxABGAEqBElSTDEwAPABs9uS8Kkz",
+            "kndctr_CEFE1E53667C8CEC0A495CA2_AdobeOrg_cluster": "irl1",
+            "AMCV_CEFE1E53667C8CEC0A495CA2%40AdobeOrg": "MCMID|53139433829967663874452417487774789529",
+            "bm_sz": "F279BC35DED03BB0D937C8918CF3EC8D~YAAQUbYkF84YWYOaAQAAa1EFnh1B57qsP/kSvY+dRZmSE5PHVqD3sFY/NS/BIX2nVFCindHeD+e/j+ZK4XtEkn89qjhEXBNfVIDjHUCdktkI6j7uxlE7lnU2zmEb4CM/tEBMTgauAKniZOn0pnZPV1Zwh4wlmwVRHMIsaBa9CsevVuvlewALkiE78ZnWuQqfdOFFwBwvrKQMDJChPxt0+p0MKYK+EEeu3uAeZsF9maVSVbOsB14hgx5bMOMML+3a13/FRudvYGsBkGqOjva3dO/xfP79ZU44xsqR3+LJGKeM9q/SKVSlFB5pZG0yizdujYZ6XaYpjkBnO3eLPKMqWmuwOMuJ8TIpCEpeWf/ZVHbzLind14+t27NW1wAVUrnESUxMIv5uvsYyJYVf8hU+5P5lYdsH8IFO8ZD9IQ7oIAe60kj1~4469829~3159620",
+            "ak_bmsc": "D74116F63937CB692599350A995924DD~000000000000000000000000000000~YAAQUbYkFxQDWYOaAQAAqKYEnh353RDKsyGArITkYY1wU1IHWSHoXk37HoZpIX1CMM7gNSVcjrNoQzx0WEPaecE0Lef/VjHeKzLuVSz60m/KjxD3FMyQ2joIK5FZLPrIrajoIPH2BaA5a/AjwIhB+MgCxgQ2gzHpGxOJOHg5Iix1QUPiiuu7oThH0NqBpGJRdLVFdA5Sln8ZcfaBOJP/r4c3hHv2rKHgldY6aGCZJZ+YTE+84JPnim1mu78sLrT34JZcz2aWcDFmqYfYxwjGoyusSqTLxZb1Qr1Mx062AX2G54c57XFsg9E9LM3pXxkvbg8Zzy24PMjTAWeah1Fbxw912cegpYRc/XEavHsmrxmUA5wuLhZcqZIpDvcpzPKlNxVR0BQw/i3lmdhkS4i1XFa/5xlqRUsE/q4qq+EC6D9pYwZqh4P+ZiBN6TcYF6hxEpGrX5fpr9iKpPBnSsjsp8M=",
+            "akaalb_betting_pokerstars": "1763589540~op=betting_pokerstars_sisal_it:farm-a-betting-pokerstars|~rv=76~m=farm-a-betting-pokerstars:0|~os=4b5a4f342ca6c17448c194d2ad31dca2~id=411f11baa7388b0fff23340b5dab8751"
+         }
+>>>>>>> 764a9f6d772387b1341d1e4afbdc22ba5abc679a
       }
    ]
 }

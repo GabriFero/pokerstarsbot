@@ -112,14 +112,25 @@ def kill_process(name):
 def update_accounts_info(sess_dict):
     with open(f"{os.getcwd()}\\config\\pokerstars\\accounts.json", "r", encoding="utf-8") as json_file:
         settings = load(json_file)
+    
     for profile in settings["profiles"]:
         if sess_dict.get(profile["username"]):
-            profile["jwt_token"] = sess_dict[profile["username"]].jwt_token
-            profile["token"] = sess_dict[profile["username"]].token
-            if sess_dict[profile["username"]].proxy is not None:
-                profile["proxy"] = sess_dict[profile["username"]].proxy
-            profile["account_id"] = sess_dict[profile["username"]].account_id
-            profile["login_expiration"] = sess_dict[profile["username"]].login_expiration
+            session_obj = sess_dict[profile["username"]]
+            
+            profile["jwt_token"] = session_obj.jwt_token
+            profile["token"] = session_obj.token
+            if session_obj.proxy is not None:
+                profile["proxy"] = session_obj.proxy
+            profile["account_id"] = session_obj.account_id
+            profile["login_expiration"] = session_obj.login_expiration
+
+            current_cookies = {}
+
+            for cookie in session_obj.pokerstars_session.cookies.jar:
+                current_cookies[cookie.name] = cookie.value
+            
+            profile["cookies"] = current_cookies
+
     with open(f"{os.getcwd()}\\config\\pokerstars\\accounts.json", "w", encoding="utf-8") as json_file:
         dump(settings, json_file, indent=3)
 
