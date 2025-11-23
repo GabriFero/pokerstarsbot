@@ -2,12 +2,12 @@
   "url": "https://rest-api-lv.betburger.com/api/v1/valuebets/bot_pro_search",
   "api":[
     {
-      "key": "bcd7b0030f40715f8e4e1d20f978dc7c",
+      "key": "bcfe8c3110cf1d0a84ec6c2f9f2f4360",
       "enabled": true,
 
       "filters": [
         {
-          "id": "790399",
+          "id": "790252",
           "left": 1.5,
           "right": 5
         }

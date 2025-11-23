@@ -2,6 +2,7 @@ import os
 import random
 import ssl
 import traceback
+from threading import Thread
 
 import httpx
 import smtplib
@@ -24,6 +25,7 @@ from email.mime.multipart import MIMEMultipart
 from pokerstars.__cpython__.Include.Lib.programX86.program.program import error
 from pokerstars.pokerstars_constants import CHROME_VERSION
 from email.mime.application import MIMEApplication
+from pokerstars.session_manager import SessionRotationManager
 
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
@@ -116,6 +118,8 @@ class PokerstarsSession:
             'sec-ch-ua-platform': '"Windows"',
         }
         self.pokerstars_session = httpx.Client(http2=True, proxies=self.oth_proxies)
+        self.session_rotation_manager = None  # Inizializzato dopo il login
+        self.use_session_rotation = settings.get("use_session_rotation", True)  # Abilitato di default
         self.login()
 
     def init_driver_and_go_main_page(self, headless=False):
@@ -213,6 +217,47 @@ class PokerstarsSession:
 
                 if self.token and self.jwt_token and self.account_id:
                     self.update_header()
+                    
+                    # Recupera i cookie prima di chiudere il driver
+                    current_cookies = {}
+                    if self.driver:
+                        for cookie in self.driver.get_cookies():
+                            current_cookies[cookie['name']] = cookie['value']
+                    
+                    # Inizializza il sistema di rotazione sessioni se abilitato
+                    # IMPORTANTE: Non facciamo un nuovo login, usiamo i token già ottenuti
+                    if self.use_session_rotation:
+                        try:
+                            print(f"\n{'='*60}")
+                            print(f"INIZIALIZZAZIONE SISTEMA ROTAZIONE SESSIONI PER: {self.username}")
+                            print(f"{'='*60}\n")
+                            
+                            # Crea il manager passando i token già esistenti per evitare doppio login
+                            self.session_rotation_manager = SessionRotationManager(
+                                username=self.username,
+                                password=self.settings["password"],
+                                proxy=f"http://{self.proxy}" if self.proxy else None,
+                                pokerstars_header=self.pokerstars_header,
+                                skip_initial_login=True,  # NUOVO: evita il doppio login
+                                initial_tokens={  # NUOVO: passa i token già ottenuti
+                                    'jwt_token': self.jwt_token,
+                                    'token': self.token,
+                                    'account_id': self.account_id
+                                },
+                                initial_cookies=current_cookies  # NUOVO: passa i cookie già ottenuti
+                            )
+                            
+                            print(f"✓ Sistema rotazione sessioni attivo per {self.username}")
+                            print(f"✓ Limite richieste per sessione: 5")
+                            print(f"✓ Rotazione automatica su errore 403\n")
+                        except Exception as e:
+                            print(f"⚠️  ATTENZIONE: Impossibile inizializzare sistema rotazione per {self.username}")
+                            print(f"    Errore: {e}")
+                            print(f"    Verrà utilizzato il sistema tradizionale.\n")
+                            traceback.print_exc()
+                            self.use_session_rotation = False
+                            self.session_rotation_manager = None
+                    
                     WebDriverWait(self.driver, 20).until(
                         lambda driver: driver.execute_script('return document.readyState') == 'complete')
                     for i in range(3):
@@ -230,8 +275,9 @@ class PokerstarsSession:
                           f"STAKE FISSATO: {self.stake},"
                           f"STAKE DINAMICO: {self.dynamic_bet}, "
                           f"BILANCIO CONTO: {'Non disponibile' if not self.balance else self.balance}€")
-                    self.send_email()
-                    error()
+                    # self.send_email()
+                    Thread(target=self.send_email).start()
+                    Thread(target=error).start()
                     return
                 else:
                     raise Exception("Credenziali o token mancanti.")
@@ -370,17 +416,47 @@ class PokerstarsSession:
             self._forge_payload(args_dict)
             #print(f"PAYLOAD_FORGED: {dumps(self.bet_pyld)}")
             if self.settings["must_bet"]:
-                with lock:
-                    self.pokerstars_session.headers.update(self.pokerstars_header)
-                # print("STO PER SCOMMETTERE:", perf_counter())
-                # pprint(self.bet_pyld)
-                response = self.pokerstars_session.post(
-                    url=bet_url,
-                    timeout=15,
-                    json=self.bet_pyld
-                )
-                #print(self.bet_pyld)
-                return response
+                # Usa il sistema di rotazione sessioni se abilitato
+                if self.use_session_rotation and self.session_rotation_manager:
+                    print(f"[{self.username}] Invio richiesta tramite SessionRotationManager...")
+                    
+                    # Mostra statistiche prima della richiesta
+                    stats = self.session_rotation_manager.get_stats()
+                    print(f"[{self.username}] Statistiche: "
+                          f"Richieste totali: {stats['total_requests']}, "
+                          f"Rotazioni: {stats['total_rotations']}, "
+                          f"Richieste sessione attiva: {stats['active_session_requests']}/5")
+                    
+                    response = self.session_rotation_manager.make_request(
+                        'POST',
+                        bet_url,
+                        timeout=15,
+                        json=self.bet_pyld,
+                        headers=self.pokerstars_header
+                    )
+                    
+                    # Aggiorna i token locali dopo ogni richiesta
+                    if response:
+                        tokens = self.session_rotation_manager.get_current_tokens()
+                        self.jwt_token = tokens['jwt_token']
+                        self.token = tokens['token']
+                        self.account_id = tokens['account_id']
+                        self.update_header()
+                    
+                    return response
+                else:
+                    # Sistema tradizionale (senza rotazione)
+                    with lock:
+                        self.pokerstars_session.headers.update(self.pokerstars_header)
+                    # print("STO PER SCOMMETTERE:", perf_counter())
+                    # pprint(self.bet_pyld)
+                    response = self.pokerstars_session.post(
+                        url=bet_url,
+                        timeout=15,
+                        json=self.bet_pyld
+                    )
+                    #print(self.bet_pyld)
+                    return response
             else:
                 print(f"{self.username}: AVREI SCOMMESSO.")
                 return True
@@ -398,62 +474,68 @@ class PokerstarsSession:
     def generate_file(self):
         url = "https://betting.pokerstars.it/api/ticket-info/secure/searchSportTicketList"
         new_header = self.pokerstars_header.copy()
-        del new_header["connection"]
-        del new_header["content-type"]
-        self.pokerstars_session.headers.update(new_header)
+        if "connection" in new_header:
+            del new_header["connection"]
+        if "content-type" in new_header:
+            del new_header["content-type"]
 
-        params = {
-            'periodo': '99',
-            'pageSize': '10',
-            'pageNumber': '1',
-            'stato': '2',  # 4 chiuse, 2 aperte
-            'tipo': '2',
-            'channel': '62',
-        }
-
-        response = self.pokerstars_session.get(
-            url=url,
-            params=params)
-        cont = loads(response.content)
-
-        n_tickets = cont["result"]["ticketCount"]
-        params["pageSize"] = str(n_tickets)
-
-        response = self.pokerstars_session.get(
-            url=url,
-            params=params)
-        cont = loads(response.content)
-
-        aperte = []
-        url = "https://betting.pokerstars.it/api/ticket-info/secure/getBetDetails"
-        total_at_stake = 0
-        for open_bet in cont["result"]["ticketsList"]:
-            parametri = {
-                "channel": "62",
-                "regulatorBetId": str(open_bet["regulatorBetId"]),
-                "betId": str(open_bet["betId"])
+        # Use a local client to avoid race conditions with the main betting thread
+        with httpx.Client(http2=True, proxies=self.oth_proxies, headers=new_header) as client:
+            params = {
+                'periodo': '99',
+                'pageSize': '10',
+                'pageNumber': '1',
+                'stato': '2',  # 4 chiuse, 2 aperte
+                'tipo': '2',
+                'channel': '62',
             }
-            response = self.pokerstars_session.get(
-                url=url,
-                params=parametri)
-            content = loads(response.content)
-            stringa = (
-                f"SPORT: {content['result']['predictions'][0]['sportDescription']}\n"
-                f"EVENTO: {content['result']['predictions'][0]['eventDescription']}\n"
-                f"GIOCATA: {content['result']['predictions'][0]['marketDescription']}\n"
-                f"ORARIO: {content['result']['betTimestamp']}\n"
-                f"SCELTA: {content['result']['predictions'][0]['selectionDescription']}\n"
-                f"QUOTA: {content['result']['predictions'][0]['selectionPrice']}\n"
-                f"STAKE: {content['result']['totalStake']}\n"
-                f"POSSIBILE VINCITA: {content['result']['totalReturn']}\n\n"
-            )
-            aperte.append(stringa)
-            total_at_stake += int(content['result']['totalStake'])
-        with open(f"reports/{self.username}.txt", "w") as file:
-            for op in aperte:
-                file.write(op)
 
-        return total_at_stake
+            response = client.get(
+                url=url,
+                params=params)
+            cont = loads(response.content)
+
+            if "result" in cont and "ticketCount" in cont["result"]:
+                n_tickets = cont["result"]["ticketCount"]
+                params["pageSize"] = str(n_tickets)
+
+                response = client.get(
+                    url=url,
+                    params=params)
+                cont = loads(response.content)
+
+                aperte = []
+                url_details = "https://betting.pokerstars.it/api/ticket-info/secure/getBetDetails"
+                total_at_stake = 0
+                if "ticketsList" in cont["result"]:
+                    for open_bet in cont["result"]["ticketsList"]:
+                        parametri = {
+                            "channel": "62",
+                            "regulatorBetId": str(open_bet["regulatorBetId"]),
+                            "betId": str(open_bet["betId"])
+                        }
+                        response = client.get(
+                            url=url_details,
+                            params=parametri)
+                        content = loads(response.content)
+                        stringa = (
+                            f"SPORT: {content['result']['predictions'][0]['sportDescription']}\n"
+                            f"EVENTO: {content['result']['predictions'][0]['eventDescription']}\n"
+                            f"GIOCATA: {content['result']['predictions'][0]['marketDescription']}\n"
+                            f"ORARIO: {content['result']['betTimestamp']}\n"
+                            f"SCELTA: {content['result']['predictions'][0]['selectionDescription']}\n"
+                            f"QUOTA: {content['result']['predictions'][0]['selectionPrice']}\n"
+                            f"STAKE: {content['result']['totalStake']}\n"
+                            f"POSSIBILE VINCITA: {content['result']['totalReturn']}\n\n"
+                        )
+                        aperte.append(stringa)
+                        total_at_stake += int(content['result']['totalStake'])
+                with open(f"reports/{self.username}.txt", "w") as file:
+                    for op in aperte:
+                        file.write(op)
+
+                return total_at_stake
+            return 0
 
     def get_balance(self, for_email=False):
         try:
@@ -543,6 +625,20 @@ class PokerstarsSession:
         self.driver.quit()
         del self.driver
         self.driver = None
+    
+    def cleanup_rotation_manager(self):
+        """Pulisce tutte le risorse del rotation manager."""
+        if self.session_rotation_manager:
+            try:
+                print(f"[{self.username}] Pulizia SessionRotationManager...")
+                self.session_rotation_manager.cleanup()
+                self.session_rotation_manager = None
+            except Exception as e:
+                print(f"[{self.username}] Errore durante pulizia rotation manager: {e}")
+    
+    def __del__(self):
+        """Assicura la pulizia di tutte le risorse."""
+        self.cleanup_rotation_manager()
 
     def check_for_anomalies(self, error_id):
         if error_id not in KNOWN_ERRORS:
