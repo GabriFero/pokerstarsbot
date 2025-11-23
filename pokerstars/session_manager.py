@@ -6,6 +6,7 @@ dopo 5 richieste o errore 403.
 
 import os
 import httpx
+import uuid
 import traceback
 from time import sleep, time
 from copy import deepcopy
@@ -493,6 +494,51 @@ class BrowserSession:
         self.last_request_time = time()
         print(f"[{self.session_id}] Richieste effettuate: {self.request_count}/{self.max_requests}")
 
+    def perform_logout(self):
+        """Esegue il logout via API prima di chiudere la sessione."""
+        if not self.is_logged_in or not self.jwt_token:
+            return
+
+        try:
+            print(f"[{self.session_id}] Esecuzione logout via API...")
+            
+            client = self.get_httpx_client()
+            xsrf_token = self.cookies.get("XSRF-TOKEN")
+            
+            headers = {
+                "Accept": "application/json, text/plain, */*",
+                "Accept-Encoding": "gzip, deflate, br, zstd",
+                "Accept-Language": "it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7",
+                "Authorization": f"Bearer {self.jwt_token}",
+                "Content-Type": "application/json",
+                "Origin": "https://areaprivata.pokerstars.it",
+                "Referer": "https://areaprivata.pokerstars.it/area-riservata/?endcallbackurl=https%3A%2F%2Fwww.pokerstars.it%2F&cancelcallbackurl=https%3A%2F%2Fwww.pokerstars.it%2F",
+                "User-Agent": USER_AGENT,
+                "x-call-id": str(uuid.uuid4()),  # Genera un nuovo UUID per ogni richiesta
+                "x-channel-id": "62",
+                "x-channel-info": USER_AGENT,  # Re-usa User-Agent come in esempio
+            }
+            if xsrf_token:
+                headers["x-xsrf-token"] = xsrf_token
+
+            try:
+                response = client.post(
+                    "https://areaprivata.pokerstars.it/api/authentication-ms/v1/logout",
+                    headers=headers,
+                    json={}, # Corrected from paylaod and set to empty dict
+                    timeout=5
+                )
+                
+                if response.status_code == 200:
+                    print(f"[{self.session_id}] Logout API completato con successo.")
+                else:
+                    print(f"[{self.session_id}] Logout API fallito: {response.status_code}")
+            except Exception as e:
+                print(f"[{self.session_id}] Errore richiesta logout: {e}")
+                
+        except Exception as e:
+            print(f"[{self.session_id}] Errore generale logout API: {e}")
+
     def should_rotate(self):
         """Verifica se la sessione deve essere ruotata."""
         return self.request_count >= self.max_requests
@@ -669,6 +715,8 @@ class SessionRotationManager:
             # Chiudiamo subito la vecchia sessione per liberare risorse (riduce carico CPU/RAM)
             print(f"[ROTAZIONE] Step 1.1: Chiusura vecchia sessione attiva ({old_active_id})...")
             try:
+                # Esegui logout API prima di chiudere
+                old_active.perform_logout()
                 old_active.close()
                 print(f"[ROTAZIONE] Vecchia sessione attiva chiusa con successo")
             except Exception as e:

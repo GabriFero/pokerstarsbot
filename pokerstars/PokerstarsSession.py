@@ -310,7 +310,7 @@ class PokerstarsSession:
                                                 'locale': "it_IT",
                                                 'loggedIn': True,
                                                 'channel': 62,
-                                                'brandId': 175,
+                                                'brandId': 390,
                                                 'offerId': 0,
                                                 })
         self.pokerstars_session.headers.update(self.pokerstars_header)
@@ -461,7 +461,14 @@ class PokerstarsSession:
                 print(f"{self.username}: AVREI SCOMMESSO.")
                 return True
 
-        except Exception:
+        except Exception as e:
+            if "CIRCUIT BREAKER" in str(e):
+                print(f"\n{'X'*60}")
+                print(f"CRITICAL STOP per {self.username}: {e}")
+                print(f"Il bot smetterà di scommettere per questo account temporaneamente.")
+                print(f"{'X'*60}\n")
+                return False
+                
             traceback.print_exc()
             print(f"{self.username}: ERRORE GENERICO DURANTE LA FASE DI SCOMMESSA SU FILTRO {filter_id}. "
                   "CONTATTARE IL SUPPORTO CON L'ERRORE SOPRA RIPORTATO.")
